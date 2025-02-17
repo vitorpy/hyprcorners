@@ -2,7 +2,7 @@
 name = "hyprcorners"
 version = "0.1.0"
 edition = "2021"
-license = "LICENSE"
+license-file = "LICENSE"
 repository = "https://github.com/ArnoDarkrose/hyprcorners"
 readme = "README.md"
 description = "hot corners for hyprland"
