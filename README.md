@@ -6,6 +6,7 @@ You can download binaries for Linux from the releases page or install via cargo:
 
 # Configuration
 The app will create some default config file in ~/.config/hypr directory called hyprcorners.toml. 
+
 Keys:
 - timeout (defaults to 50ms). This specifies how often will the app wake app and check your cursor position
 - screen_width (defualts to 1920 pixels)
