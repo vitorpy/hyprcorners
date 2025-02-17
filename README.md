@@ -17,6 +17,7 @@ There are also 4 tables:
 - top_left
 - bottom_right
 - bottom_left
+
 Each table is associated with one of your corners and can have following keys:
 - radius (defaults to 10 pixels)
 - dispatcher (string, defaults to "workspace"). This is the name of the dispatcher that you want to call
