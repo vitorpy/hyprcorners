@@ -1,7 +1,11 @@
 [package]
-name = "hot-corners"
+name = "hyprcorners"
 version = "0.1.0"
 edition = "2021"
+licence = "LICENSE"
+repository = "https://github.com/ArnoDarkrose/hyprcorners"
+readme = "README.md"
+description = "hot corners for hyprland"
 
 [dependencies]
 expanduser = "1.2.2"

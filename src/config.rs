@@ -34,13 +34,28 @@ fn screen_height_default() -> i64 {
 }
 
 fn timeout_default() -> u64 {
-    100
+    50
+}
+
+fn radius_default() -> i64 {
+    10
+}
+
+fn dispatcher_default() -> String {
+    "workspace".to_string()
+}
+
+fn arg_default() -> String {
+    "".to_string()
 }
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct Corner {
+    #[serde(default = "radius_default")]
     pub radius: i64,
+    #[serde(default = "dispatcher_default")]
     pub dispatcher: String,
+    #[serde(default = "arg_default")]
     pub args: String,
 }
 
@@ -72,7 +87,7 @@ impl Config {
         let config_path = expanduser::expanduser("~/.config/hypr")
             .expect("failed to find hyprland config directory");
 
-        let config_path = config_path.join("hot_corners.toml");
+        let config_path = config_path.join("hyprcorners.toml");
 
         let mut config = String::new();
         let mut fd = match fs::File::open(&config_path).await {
