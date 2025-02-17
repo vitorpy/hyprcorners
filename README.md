@@ -11,6 +11,7 @@ Keys:
 - timeout (defaults to 50ms). This specifies how often will the app wake app and check your cursor position
 - screen_width (defualts to 1920 pixels)
 - screen_height (defaults to 1080 pixels)
+- sticky_timeout (disabled by default). If you specify this parameter, you will be able to keep dispatching the command without leaving the corner. If you consider using this, the recommended value is 300 ms
 
 There are also 4 tables:
 - top_right
