@@ -1,0 +1,41 @@
+# Example configuration for hyprcorners with per-monitor support
+
+# Global settings
+timeout = 50  # Polling timeout in milliseconds
+sticky_timeout = 500  # Optional: milliseconds before re-triggering corners
+
+# Global hot corner configuration (applies to all monitors without specific config)
+[global]
+[global.top_right]
+radius = 10
+dispatcher = "workspace"
+args = "e+1"
+
+[global.bottom_left]
+radius = 10
+dispatcher = "workspace" 
+args = "e-1"
+
+# Monitor-specific configurations (use monitor names from hyprctl monitors)
+[monitors.DP-1]
+[monitors.DP-1.top_left]
+radius = 15
+dispatcher = "exec"
+args = "kitty"
+
+[monitors.DP-1.bottom_right]
+radius = 15
+dispatcher = "workspace"
+args = "special"
+
+# Configuration for a second monitor
+[monitors.HDMI-A-1]
+[monitors.HDMI-A-1.top_right]
+radius = 20
+dispatcher = "killactive"
+args = ""
+
+[monitors.HDMI-A-1.top_left]
+radius = 20
+dispatcher = "fullscreen"
+args = "1"

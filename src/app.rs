@@ -2,11 +2,12 @@ use crate::config::Config;
 
 use std::time::{Duration, Instant};
 
-use hyprland::data::CursorPosition;
+use hyprland::data::{CursorPosition, Monitors};
 use hyprland::shared::HyprData;
 use hyprland::Result;
 
 pub struct App;
+
 impl App {
     pub async fn run(config: Config) -> Result<()> {
         let sticky = config.sticky_timeout.is_some();
@@ -18,66 +19,87 @@ impl App {
             let mut modified_inside_corner = false;
 
             let cursor_pos = CursorPosition::get_async().await?;
-            let (x, y) = (cursor_pos.x, cursor_pos.y);
+            let (cursor_x, cursor_y) = (cursor_pos.x, cursor_pos.y);
 
-            let since_last_sticky_switch =
-                last_switch.map(|last_switch| Instant::now().duration_since(last_switch));
+            let monitors = Monitors::get_async().await?;
 
-            if !sticky
-                || since_last_sticky_switch.is_none_or(|since_last_sticky_switch| {
-                    since_last_sticky_switch.as_millis() >= config.sticky_timeout.unwrap() as u128
-                })
-            {
-                let dispatch_permitted = sticky || !inside_corner;
+            for monitor in monitors {
+                let monitor_config = match config.get_monitor_config(&monitor.name) {
+                    Some(cfg) => cfg,
+                    None => continue,
+                };
 
-                if let Some(ref corner) = config.top_right {
-                    if x > config.screen_width - corner.radius && y < corner.radius {
-                        if dispatch_permitted {
-                            corner.dispatch(&sticky, &mut last_switch).await?;
-                        }
+                let (mon_x, mon_y) = (monitor.x as i64, monitor.y as i64);
+                let (mon_width, mon_height) = (monitor.width as i64, monitor.height as i64);
 
-                        inside_corner = true;
-                        modified_inside_corner = true;
-                    }
-                }
+                if cursor_x >= mon_x && cursor_x < mon_x + mon_width && 
+                   cursor_y >= mon_y && cursor_y < mon_y + mon_height {
 
-                if let Some(ref corner) = config.top_left {
-                    if x < corner.radius && y < corner.radius {
-                        if dispatch_permitted {
-                            corner.dispatch(&sticky, &mut last_switch).await?;
-                        }
+                    let relative_x = cursor_x - mon_x;
+                    let relative_y = cursor_y - mon_y;
 
-                        inside_corner = true;
-                        modified_inside_corner = true;
-                    }
-                }
+                    let since_last_sticky_switch =
+                        last_switch.map(|last_switch| Instant::now().duration_since(last_switch));
 
-                if let Some(ref corner) = config.bottom_right {
-                    if x > config.screen_width - corner.radius
-                        && y > config.screen_height - corner.radius
+                    if !sticky
+                        || since_last_sticky_switch.is_none_or(|since_last_sticky_switch| {
+                            since_last_sticky_switch.as_millis() >= config.sticky_timeout.unwrap() as u128
+                        })
                     {
-                        if dispatch_permitted {
-                            corner.dispatch(&sticky, &mut last_switch).await?;
+                        let dispatch_permitted = sticky || !inside_corner;
+
+                        if let Some(ref corner) = monitor_config.top_right {
+                            if relative_x > mon_width - corner.radius && relative_y < corner.radius {
+                                if dispatch_permitted {
+                                    corner.dispatch(&sticky, &mut last_switch).await?;
+                                }
+
+                                inside_corner = true;
+                                modified_inside_corner = true;
+                            }
                         }
 
-                        inside_corner = true;
-                        modified_inside_corner = true;
-                    }
-                }
+                        if let Some(ref corner) = monitor_config.top_left {
+                            if relative_x < corner.radius && relative_y < corner.radius {
+                                if dispatch_permitted {
+                                    corner.dispatch(&sticky, &mut last_switch).await?;
+                                }
 
-                if let Some(ref corner) = config.bottom_left {
-                    if x < corner.radius && y > config.screen_height - corner.radius {
-                        if dispatch_permitted {
-                            corner.dispatch(&sticky, &mut last_switch).await?;
+                                inside_corner = true;
+                                modified_inside_corner = true;
+                            }
                         }
 
-                        inside_corner = true;
-                        modified_inside_corner = true;
-                    }
-                }
+                        if let Some(ref corner) = monitor_config.bottom_right {
+                            if relative_x > mon_width - corner.radius
+                                && relative_y > mon_height - corner.radius
+                            {
+                                if dispatch_permitted {
+                                    corner.dispatch(&sticky, &mut last_switch).await?;
+                                }
 
-                if !modified_inside_corner {
-                    inside_corner = false;
+                                inside_corner = true;
+                                modified_inside_corner = true;
+                            }
+                        }
+
+                        if let Some(ref corner) = monitor_config.bottom_left {
+                            if relative_x < corner.radius && relative_y > mon_height - corner.radius {
+                                if dispatch_permitted {
+                                    corner.dispatch(&sticky, &mut last_switch).await?;
+                                }
+
+                                inside_corner = true;
+                                modified_inside_corner = true;
+                            }
+                        }
+
+                        if !modified_inside_corner {
+                            inside_corner = false;
+                        }
+                    }
+                    
+                    break;
                 }
             }
 

@@ -1,4 +1,5 @@
 use std::time::Instant;
+use std::collections::HashMap;
 
 use hyprland::dispatch::{Dispatch, DispatchType};
 use hyprland::Result;
@@ -7,30 +8,26 @@ use tokio::{fs, io::AsyncReadExt, io::AsyncWriteExt};
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct Config {
-    pub top_right: Option<Corner>,
-    pub top_left: Option<Corner>,
-    pub bottom_right: Option<Corner>,
-    pub bottom_left: Option<Corner>,
+    #[serde(default)]
+    pub monitors: HashMap<String, MonitorConfig>,
+    #[serde(default)]
+    pub global: Option<MonitorConfig>,
     #[serde(default = "sticky_timeout_default")]
     pub sticky_timeout: Option<u64>,
     #[serde(default = "timeout_default")]
     pub timeout: u64,
-    #[serde(default = "screen_width_default")]
-    pub screen_width: i64,
-    #[serde(default = "screen_height_default")]
-    pub screen_height: i64,
+}
+
+#[derive(Deserialize, Debug, Serialize, Clone)]
+pub struct MonitorConfig {
+    pub top_right: Option<Corner>,
+    pub top_left: Option<Corner>,
+    pub bottom_right: Option<Corner>,
+    pub bottom_left: Option<Corner>,
 }
 
 fn sticky_timeout_default() -> Option<u64> {
     None
-}
-
-fn screen_width_default() -> i64 {
-    1980
-}
-
-fn screen_height_default() -> i64 {
-    1080
 }
 
 fn timeout_default() -> u64 {
@@ -49,7 +46,7 @@ fn arg_default() -> String {
     "".to_string()
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct Corner {
     #[serde(default = "radius_default")]
     pub radius: i64,
@@ -59,7 +56,7 @@ pub struct Corner {
     pub args: String,
 }
 
-impl std::default::Default for Config {
+impl std::default::Default for MonitorConfig {
     fn default() -> Self {
         Self {
             top_right: None,
@@ -74,10 +71,17 @@ impl std::default::Default for Config {
                 dispatcher: "workspace".to_string(),
                 args: "e-1".to_string(),
             }),
+        }
+    }
+}
+
+impl std::default::Default for Config {
+    fn default() -> Self {
+        Self {
+            monitors: HashMap::new(),
+            global: Some(MonitorConfig::default()),
             sticky_timeout: None,
             timeout: 50,
-            screen_width: 1920,
-            screen_height: 1080,
         }
     }
 }
@@ -114,6 +118,10 @@ impl Config {
 
         config
     }
+
+    pub fn get_monitor_config(&self, monitor_name: &str) -> Option<&MonitorConfig> {
+        self.monitors.get(monitor_name).or(self.global.as_ref())
+    }
 }
 
 impl Corner {
@@ -127,3 +135,4 @@ impl Corner {
         Ok(())
     }
 }
+
